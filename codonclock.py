@@ -98,7 +98,7 @@ class Utilities:
         index_output: int = 0
         for i in range(3):
             index_output += int(
-                self.codon_indexes_reversed[i][self.index_nucleotide_symbol[inputCodon]]
+                self.codon_indexes_reversed[i][self.index_nucleotide_symbol[inputCodon[i]]]
             )
         return index_output
 
@@ -119,12 +119,10 @@ class Utilities:
         initial_index: int = inputIndex
         codon_output: str = ""
 
-        # TODO : select better variable names for this loop
         for exception_tracker in self.exception_indexes_list:
             if initial_index == exception_tracker:
                 return self.exception_indexes_dict[initial_index]
 
-        # TODO : select better variable names for this loop
         for codon_index_list_stepper in self.codon_indexes:
             for _, nucleotide_stepper in enumerate(codon_index_list_stepper):
                 if inputIndex >= int(nucleotide_stepper):
