@@ -1,135 +1,170 @@
 """
-    This python file is created for codon clock project.
-    Desceription:
-        Codon clock is a new featured digital clock with taste of biology
-    
-    *** This code is not completly refactored, Thus some comments might be missing. ***
+    File name : CodonClock.py
+    Creation date : 2024/05/12 (Sunday May 12)
+    Creator : Last Chemist
+    GitHub : https://github.com/LastChemist
+    License : Apache-2.0 license (https://www.apache.org/licenses/LICENSE-2.0)
+
+    Note : This Python file has been refactored from a previous version.
+
+    Description : 
+        For more information, visit https://github.com/LastChemist/CodonClock
+
+        This project aims to build a clock with base64 integer numbers using their corresponding mRNA codons.
+
+        Method Conventions : 
+            [1] - Number zero is considered as OOO
+            [2] - The valid number interval is [UUU, GGG]
+            [3] - There are 12 exceptions for converting numbers into codons that have been handled
+            [4] - In the code, the word "index" and its abbreviation are considered as "number",
+                  please don't confuse it with "index" in computer science and programming.
         
-    for more information and documantation refer to https://www.github.io/@ilaitayad3h/CodonCock
+        Program Structure:
+            [1] - The program is separated into 2 different classes: Utilities and Driver
+            [2] - Class Utilities can be used for other purposes
+            [3] - Class Driver uses the Utilities methods to perform a clock structure
+
+        Further info : 
+            Utilities :
+                [1] - This class contains functions to convert base64 numbers into codons and vice versa.
+                [2] - Note that this program does not support values higher than 64.
 """
+
 from datetime import datetime as dt
 from os import system
 from time import sleep
 
-# index tables
-leftOrganicBase = [49, 33, 17, 1]
-middleOrganicBase = [11, 7, 3, -1]
-rightOrganicBase = [4, 3, 2, 1]
+
+class Utilities:
+    def __init__(self) -> None:
+        # defining indexes
+
+        self.index_left_nucleotide: list[int] = [49, 33, 17, 1]
+        self.index_middle_nucleotide: list[int] = [11, 7, 3, -1]
+        self.index_right_nucleotide: list[int] = [4, 3, 2, 1]
+
+        # defining codon possibility list
+
+        self.codon_indexes: list[list[int]] = [
+            self.index_left_nucleotide,
+            self.index_middle_nucleotide,
+            self.index_right_nucleotide,
+        ]
+
+        self.codon_indexes_reversed: list[list[int]] = [
+            self.index_left_nucleotide[::-1],
+            self.index_middle_nucleotide[::-1],
+            self.index_right_nucleotide[::-1],
+        ]
+
+        # defining nucleotides symbol index
+
+        self.index_nucleotide_symbol: dict = {"U": 0, "C": 1, "A": 2, "G": 3}
+        self.index_nucleotide_symbol_reversed: dict = {0: "G", 1: "A", 2: "C", 3: "U"}
+
+        # the method fails on the following indexes and to handle it just skip when see these and return the
+        # corresponding Codon.
+
+        self.exception_indexes_dict: dict = {
+            4: "UUG",
+            8: "UCG",
+            12: "UAG",
+            20: "CUG",
+            24: "CCG",
+            28: "CAG",
+            36: "AUG",
+            40: "ACG",
+            44: "AAG",
+            52: "GUG",
+            56: "GCG",
+            60: "GAG",
+        }
+
+        self.exception_indexes_list = list(self.exception_indexes_dict.keys())
+
+    def Codon2Index(self, inputCodon: str):
+        """
+        Summary:
+            Converts input codon into its corresponding number.
+        Args:
+            inputCodon (str): Codons from UUU to GGG are accepted
+
+        Returns:
+            int: Returns corresponding number to the codon.
+
+        Example:
+            inputCodon = GGC, return = 62
+        """
+        index_output: int = 0
+        for i in range(3):
+            index_output += int(
+                self.codon_indexes_reversed[i][self.index_nucleotide_symbol[inputCodon]]
+            )
+        return index_output
+
+    def Index2Codon(self, inputIndex: int):
+        """
+        Summary:
+        Converts input index into the corresponding codon.
+
+        Args:
+            inputIndex (int): An int in interval 0, 64
+
+        Returns:
+            str: Returns the corresponding codon to the number.
+        """
+        if inputIndex == 0:
+            return "OOO"
+
+        initial_index: int = inputIndex
+        codon_output: str = ""
+
+        # TODO : select better variable names for this loop
+        for exception_tracker in self.exception_indexes_list:
+            if initial_index == exception_tracker:
+                return self.exception_indexes_dict[initial_index]
+
+        # TODO : select better variable names for this loop
+        for codon_index_list_stepper in self.codon_indexes:
+            for _, nucleotide_stepper in enumerate(codon_index_list_stepper):
+                if inputIndex >= int(nucleotide_stepper):
+                    inputIndex -= int(nucleotide_stepper)
+                    codon_output += str(self.index_nucleotide_symbol_reversed[_])
+                    break
+                elif inputIndex == 0:
+                    codon_output += self.index_nucleotide_symbol_reversed[3]
+                    break
+        return codon_output
 
 
-def CodonToIndex(codonInput: str):
-    """
-    Summary:
-        converts codon input into the corresponding number.
-    Args:
-        codonInput (str): codons from UUU to GGG are acceed
+class Driver:
+    def __init__(self) -> None:
+        self.util = Utilities()
 
-    Returns:
-        int: returns corresponding number to the codon.
+    def MomentCodonClock(self):
+        print(
+            "{0}:{1}:{2}".format(
+                self.util.Index2Codon(dt.now().hour),
+                self.util.Index2Codon(dt.now().minute),
+                self.util.Index2Codon(dt.now().second),
+            )
+        )
 
-    Example:
-        codonInput = GGC, return = 62
-    """
-    codonIndexes = [
-        leftOrganicBase,
-        middleOrganicBase,
-        rightOrganicBase,
-    ]  # for short and fast access
-    organicBaseIndexes = {"U": 0, "C": 1, "A": 2, "G": 3}
-    IndexOutPut = 0
-    for i in range(3):  # traces the string and extracts the charachter value.
-        IndexOutPut += int(codonIndexes[i][organicBaseIndexes[codonInput[i]]])
-    return IndexOutPut
+    def MomentNumericalClock(self):
+        print(
+            "{0}:{1}:{2}".format(
+                dt.now().hour,
+                dt.now().minute,
+                dt.now().second,
+            )
+        )
 
-
-def IndexToCodon(indexInput: int):
-    """
-    Summary:
-      converts codon input into the corresponding number.
-
-    Args:
-        indexInput (int): an int in interval 0, 64
-
-    Returns:
-        str: retruns the corresponding codon to the number.
-    """
-    if indexInput == 0:
-        return 0  # I didn't defined a certain Codon for number 0.
-    
-    codonDictionary = {0: "G", 1: "A", 2: "C", 3: "U"}
-    
-    # exceptionIndexes = [4, 8, 12, 20, 24, 28, 36, 40, 44, 52, 56, 60]
-    exceptionsDict = {
-        4: "UUG",
-        8: "UCG",
-        12: "UAG",
-        20: "CUG",
-        24: "CCG",
-        28: "CAG",
-        36: "AUG",
-        40: "ACG",
-        44: "AAG",
-        52: "GUG",
-        56: "GCG",
-        60: "GAG",
-    }
-    exceptionIndexes = list(exceptionsDict.keys())
-    initialIndex = indexInput
-    codonOutPut = ""  # in each following loops one charachter appends to this string.
-    
-    for exceptionStepper in range(
-        len(exceptionIndexes)
-    ):  # if the value was an exception program uses this value to return the answer
-        if initialIndex == exceptionIndexes[exceptionStepper]:
-            return exceptionsDict[initialIndex]
-        else:
-            continue
-
-    for leftBaseStepper in leftOrganicBase:
-        if indexInput >= int(leftBaseStepper):
-            indexInput -= int(leftBaseStepper)
-            codonOutPut += str(leftBaseStepper)
-            break
-
-    for middleBaseStepper in rightOrganicBase:
-        if indexInput >= int(middleBaseStepper):
-            indexInput -= int(middleBaseStepper)
-            codonOutPut += str(middleBaseStepper)
-            break
-
-    for rightBaseStepper in rightOrganicBase:
-        if indexInput >= int(rightBaseStepper):
-            indexInput -= int(rightBaseStepper)
-            codonOutPut += str(rightBaseStepper)
-            break
-        elif indexInput == 0:
-            codonOutPut += codonDictionary[3]
-            break
-    return codonOutPut
+    def MultiClock(self):
+        while True:
+            self.MomentCodonClock()
+            self.MomentNumericalClock()
+            sleep(1)
+            system("cls")
 
 
-#
-
-
-def MomentCodonClock():  # Shows system time in codon format
-    print(
-        f"{IndexToCodon(dt.now().hour)}:{IndexToCodon(dt.now().minute)}:{IndexToCodon(dt.now().second)}"
-    )
-
-
-def MomentNumeralClock():  # Shows system time in ordinary format.
-    print(f"{dt.now().hour}:{dt.now().minute}:{dt.now().second}")
-
-
-def MultiClock():  # shows both codon clock and ordinary digital clock.
-    while True:
-        MomentCodonClock()
-        MomentNumeralClock()
-        sleep(1)
-        system("cls")
-
-
-# end of code :)
-
-
-MultiClock()
+Driver().MultiClock()
