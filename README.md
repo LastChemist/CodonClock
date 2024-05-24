@@ -1,8 +1,7 @@
 # CodonClock
 A new featured digital clock with taste of biology
 
-# For persian guys you can see https://vrgl.ir/70E4O for some crude documents.
-
+# For persian guys you can see https://vrgl.ir/70E4O and https://vrgl.ir/3ku41 for some crude documents.
 # Preview 
 
 ![alt GUI version (written with C#)](https://files.virgool.io/upload/users/472403/posts/fatwu01a3frt/aoobxfvhkeif.gif)\
